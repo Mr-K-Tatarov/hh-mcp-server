@@ -1,0 +1,19 @@
+[project]
+name = "hh-mcp-server"
+version = "0.1.0"
+description = "MCP server for hh.ru job search via browser automation"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=3.0.0",
+    "playwright>=1.40.0",
+]
+
+[project.scripts]
+hh-mcp-server = "hh_mcp_server.cli_main:main"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["hh_mcp_server*"]

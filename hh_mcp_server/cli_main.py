@@ -1,0 +1,34 @@
+import argparse
+import asyncio
+import logging
+import sys
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="HH.ru MCP Server")
+    parser.add_argument("--login", action="store_true", help="Launch browser for authentication")
+    parser.add_argument("--no-headless", action="store_true", help="Run browser with visible window")
+    parser.add_argument("--log-level", default="WARNING", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    parser.add_argument("--transport", default="stdio", choices=["stdio", "streamable-http"])
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8766)
+    args = parser.parse_args()
+
+    logging.basicConfig(level=getattr(logging, args.log_level), format="%(levelname)s %(name)s: %(message)s")
+
+    if args.login:
+        from hh_mcp_server.utils.auth import run_login_flow
+        asyncio.run(run_login_flow())
+        return
+
+    if args.no_headless:
+        from hh_mcp_server.drivers.browser import set_headless
+        set_headless(False)
+
+    from hh_mcp_server.server import create_mcp_server
+    mcp = create_mcp_server()
+
+    if args.transport == "streamable-http":
+        mcp.run(transport="streamable-http", host=args.host, port=args.port)
+    else:
+        mcp.run(transport="stdio")
