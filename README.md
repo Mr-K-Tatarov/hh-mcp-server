@@ -73,7 +73,8 @@ uv run hh-mcp-server --transport streamable-http --port 8766
 
 | Инструмент | Описание |
 |---|---|
-| `search_vacancies` | Поиск вакансий (keywords, area, salary, experience, schedule) |
+| `search_vacancies` | Поиск вакансий по ключевым словам (keywords, area, salary, experience, schedule) |
+| `get_recommended_vacancies` | Подходящие вакансии для резюме (алгоритм hh.ru, до 1000 вакансий) |
 | `get_vacancy_details` | Детали вакансии по ID |
 | `get_my_resumes` | Список резюме пользователя |
 | `get_resume` | Полное содержимое резюме |
@@ -81,6 +82,19 @@ uv run hh-mcp-server --transport streamable-http --port 8766
 | `get_responses` | Статусы откликов |
 | `get_employer_info` | Информация о компании |
 | `close_session` | Закрытие браузера и сохранение сессии |
+
+### Рекомендованные вакансии
+
+Инструмент `get_recommended_vacancies` использует алгоритм hh.ru для подбора вакансий на основе резюме (аналог страницы "Подходящие вакансии"):
+
+```
+get_recommended_vacancies(
+    resume_id="0fe69243ff063cb4720039ed1f574b71676a55",
+    max_pages=50  # до 1000 вакансий (20 на страницу)
+)
+```
+
+Это значительно точнее, чем keyword search — hh.ru анализирует опыт, навыки и должность из резюме.
 
 ### Отклик на вакансию (двухшаговый flow)
 
