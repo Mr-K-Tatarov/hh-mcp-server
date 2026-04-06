@@ -126,3 +126,52 @@ async def search_vacancies(
         "vacancies": all_vacancies,
         "vacancy_ids": [v["id"] for v in all_vacancies if v["id"]],
     }
+
+
+def build_recommended_url(
+    resume_id: str,
+    page: int = 0,
+) -> str:
+    params: dict[str, str] = {
+        "resume": resume_id,
+        "from": "resumelist",
+        "page": str(page),
+        "per_page": "20",
+    }
+    return f"{BASE_URL}/search/vacancy?{urlencode(params)}"
+
+
+async def get_recommended_vacancies(
+    page: Page,
+    *,
+    resume_id: str,
+    max_pages: int = 5,
+) -> dict:
+    """Fetch vacancies recommended by hh.ru for a specific resume."""
+    all_vacancies = []
+    total_found = None
+
+    for page_num in range(max_pages):
+        url = build_recommended_url(resume_id, page_num)
+        logger.info("Fetching recommended vacancies page %d: %s", page_num, url)
+        await navigate_and_wait(page, url, S.VACANCY_CARD)
+
+        if total_found is None:
+            total_found = await extract_text(page, S.SEARCH_RESULT_COUNT)
+
+        vacancies = await parse_vacancy_cards(page)
+        if not vacancies:
+            break
+
+        all_vacancies.extend(vacancies)
+
+        has_next = await page.query_selector(S.PAGER_NEXT)
+        if not has_next:
+            break
+
+    return {
+        "total_found": total_found,
+        "pages_loaded": min(max_pages, (len(all_vacancies) // 20) + 1),
+        "vacancies": all_vacancies,
+        "vacancy_ids": [v["id"] for v in all_vacancies if v["id"]],
+    }
