@@ -149,6 +149,12 @@ async def apply_to_vacancy(
         # Maybe it applied directly (one-click apply)
         if "negotiations" in page.url:
             return {"status": "success", "message": "Applied successfully (direct apply)."}
+
+        # Re-check if already applied (button click may have triggered a quick-apply)
+        already_after_click = await page.query_selector(S.ALREADY_APPLIED)
+        if already_after_click:
+            return {"status": "already_applied", "message": "You have already applied to this vacancy."}
+
         return {"status": "error", "message": "Apply form did not appear."}
 
     # Detect questions
