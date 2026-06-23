@@ -13,6 +13,7 @@ from hh_mcp_server.scraping.resume_parser import (
     parse_applicant_resumes_payload,
     parse_initial_state_json,
 )
+from hh_mcp_server.scraping.vpn import handle_vpn_warning, is_vpn_blocked, raise_access_blocked_error
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ async def _get_xsrf_token(page: Page) -> str | None:
 
 async def _prepare_resumes_page(page: Page) -> None:
     """Открывает страницу резюме и дожидается загрузки клиентских запросов."""
-    if RESUMES_PAGE_URL not in page.url:
+    if RESUMES_PAGE_URL not in page.url or await is_vpn_blocked(page):
         await page.goto(RESUMES_PAGE_URL, wait_until="domcontentloaded", timeout=30000)
 
     await dismiss_cookie_banner(page)
@@ -89,12 +90,19 @@ async def _prepare_resumes_page(page: Page) -> None:
     if "/account/login" in page.url:
         raise AuthenticationError()
 
+    if await is_vpn_blocked(page):
+        if not await handle_vpn_warning(page):
+            raise_access_blocked_error()
+
     try:
         await page.wait_for_load_state("networkidle", timeout=15000)
     except Exception:
         logger.debug("networkidle timeout on resumes page, continuing")
 
     await page.wait_for_timeout(1500)
+
+    if await is_vpn_blocked(page):
+        raise_access_blocked_error()
 
 
 async def _browser_fetch_json(page: Page, url: str) -> tuple[int, Any | None]:
