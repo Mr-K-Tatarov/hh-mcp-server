@@ -4,15 +4,20 @@ import re
 from playwright.async_api import Page
 
 from hh_mcp_server.exceptions import AuthenticationError, ScrapingError
+from hh_mcp_server.scraping.vpn import handle_vpn_warning, is_vpn_blocked, raise_access_blocked_error
 
 logger = logging.getLogger(__name__)
 
 
 async def navigate_and_wait(page: Page, url: str, wait_selector: str | None = None, timeout: int = 15000) -> None:
-    response = await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+    await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
 
     if "/account/login" in page.url:
         raise AuthenticationError()
+
+    if await is_vpn_blocked(page):
+        if not await handle_vpn_warning(page):
+            raise_access_blocked_error()
 
     if "captcha" in page.url.lower():
         raise ScrapingError("Captcha detected. Please solve it manually and retry.")

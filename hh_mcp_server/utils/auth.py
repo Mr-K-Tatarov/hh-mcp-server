@@ -38,8 +38,10 @@ async def run_login_flow() -> None:
 
 
 async def check_authenticated(page) -> bool:
-    url = page.url
+    url = page.url.lower()
     if "/account/login" in url:
+        return False
+    if "vpncheeck" in url or "captcha" in url:
         return False
     return True
 

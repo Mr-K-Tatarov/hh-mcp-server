@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from hh_mcp_server.scraping.resume_parser import (
     parse_applicant_resumes_payload,
     parse_initial_state_html,
+    parse_initial_state_json,
     resume_item_from_raw,
 )
 
@@ -85,3 +88,23 @@ def test_parse_initial_state_html_invalid_json() -> None:
     """Возвращает пустой список при битом JSON."""
     html = '<template id="HH-Lux-InitialState">{broken</template>'
     assert parse_initial_state_html(html) == []
+
+
+def test_parse_initial_state_json_nested_applicant_resumes() -> None:
+    """Находит applicantResumes во вложенной структуре JSON."""
+    payload = {
+        "page": {
+            "state": {
+                "applicantResumes": [
+                    {
+                        "_attributes": {"hash": "nested123"},
+                        "title": [{"string": "Data Engineer"}],
+                    }
+                ]
+            }
+        }
+    }
+    resumes = parse_initial_state_json(json.dumps(payload))
+    assert len(resumes) == 1
+    assert resumes[0]["id"] == "nested123"
+    assert resumes[0]["title"] == "Data Engineer"
