@@ -34,8 +34,12 @@ QUESTION_LABEL = ".vacancy-questions-item__title, label"
 QUESTION_INPUT = "input, textarea, select"
 
 # === Resume ===
-RESUME_CARD = "[data-qa='resume']"
-RESUME_TITLE_LINK = "[data-qa^='resume-card-link'], [data-qa='resume-title-link']"
+RESUME_CARD = (
+    "[data-qa='resume'], [data-qa='resume-card'], [data-qa='applicant-resume-card']"
+)
+RESUME_TITLE_LINK = (
+    "a[href*='/resume/'], [data-qa^='resume-card-link'], [data-qa='resume-title-link']"
+)
 
 # === Responses/Negotiations ===
 RESPONSE_ITEM = "[data-qa='negotiations-item']"
